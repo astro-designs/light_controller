@@ -1,8 +1,13 @@
-# NeoPixel library strandtest example
-# Author: Tony DiCola (tony@tonydicola.com)
-#
-# Direct port of the Arduino NeoPixel library strandtest example.  Showcases
-# various animations on a strip of NeoPixels.
+
+# neopixels.py
+# Kitchen lights controller
+# By Mark Cantrill (mark@astro-designs.com)
+# Originally based on NeoPixel library strandtest example by Tony DiCola
+# Direct port of the Arduino NeoPixel library strandtest example.
+
+# Mode button allows some rudimentary control over the strand 'pattern'
+# Plus & Minus buttons add brightness a level of brightness control to some patterns
+
 import RPi.GPIO as GPIO
 import time
 from random import randint
@@ -329,9 +334,9 @@ def pacman(strip, wait_ms=50):
 	# Initial positions...
 	pacman_pos = 1 # randint(1,10)
 	pacman_dir = 1 #left to right
-	redghost_pos = -80 + randint(0,19)
-	redghost2_pos = -105 + randint(0,9)
-	redghost3_pos = -120 + randint(0,9)
+	redghost_pos = -90 + randint(0,19)
+	redghost2_pos = -115 + randint(0,9)
+	redghost3_pos = -125 + randint(0,9)
 	ghost_dir = 1 #left to right
 	blueghost_pos = -1000
 	blueghost2_pos = -1020
