@@ -5,6 +5,7 @@
 # various animations on a strip of NeoPixels.
 import RPi.GPIO as GPIO
 import time
+from random import randint
 
 from neopixel import *
 
@@ -157,6 +158,361 @@ def colorWipe(strip, color, wait_ms=50):
 		strip.show()
 		time.sleep(wait_ms/1000.0)
 
+def cylon(strip, wait_ms=50):
+	print "The Cylons are here!"
+	dir = 1
+	i = 10
+	i1 = 9
+	i2 = 8
+	i3 = 7
+	i4 = 6
+	i5 = 5
+	i6 = 4
+	i7 = 3
+	i8 = 2
+	i9 = 1
+	
+	while GPIO.input(pinButtonMode) == 0:
+		strip.setPixelColor(i,  Color(16,16,16))
+		strip.setPixelColor(i1, Color(32,32,0))
+		strip.setPixelColor(i2, Color(64,64,0))
+		strip.setPixelColor(i3, Color(200,200,0))
+		strip.setPixelColor(i4, Color(255,255,0))
+		strip.setPixelColor(i5, Color(255,255,0))
+		strip.setPixelColor(i6, Color(200,200,0))
+		strip.setPixelColor(i7, Color(64,64,0))
+		strip.setPixelColor(i8, Color(32,32,0))
+		strip.setPixelColor(i9, Color(16,16,16))
+		strip.show()
+		
+		i9 = i8
+		i8 = i7
+		i7 = i6
+		i6 = i5
+		i5 = i4
+		i4 = i3
+		i3 = i2
+		i2 = i1
+		i1 = i
+		
+		if i == 1:
+			dir = 1
+			i+=1
+		elif i == strip.numPixels()-1:
+			dir = 0
+			i-=1
+		elif dir == 1:
+			i+=1
+		else:
+			i-=1
+		
+		time.sleep(wait_ms/1000.0)
+	time.sleep(1)
+	
+def kitt(strip, wait_ms=50):
+	print "Hello, I'm the Knight Industries Two-Thousand!"
+	dir = 1
+	i   = 30
+	i1  = 29
+	i2  = 28
+	i3  = 27
+	i4  = 26
+	i5  = 25
+	i6  = 24
+	i7  = 23
+	i8  = 22
+	i9  = 21
+	i10 = 20
+	i11 = 19
+	i12 = 18
+	i13 = 17
+	i14 = 16
+	i15 = 15
+	i16 = 14
+	i17 = 13
+	i18 = 12
+	i19 = 11
+	i20 = 10
+	i21 = 9
+	i22 = 8
+	i23 = 7
+	i24 = 6
+	i25 = 5
+	i26 = 4
+	i27 = 3
+	i28 = 2
+	i29 = 1
+	
+	while GPIO.input(pinButtonMode) == 0:
+		strip.setPixelColor(i,   Color(0,255,0))
+		strip.setPixelColor(i1,  Color(0,255,0))
+		strip.setPixelColor(i2,  Color(0,255,0))
+		strip.setPixelColor(i3,  Color(0,255,0))
+		strip.setPixelColor(i4,  Color(0,200,0))
+		strip.setPixelColor(i5,  Color(0,200,0))
+		strip.setPixelColor(i6,  Color(0,200,0))
+		strip.setPixelColor(i7,  Color(0,150,0))
+		strip.setPixelColor(i8,  Color(0,150,0))
+		strip.setPixelColor(i9,  Color(0,150,0))
+		strip.setPixelColor(i10, Color(0,100,0))
+		strip.setPixelColor(i11, Color(0,100,0))
+		strip.setPixelColor(i12, Color(0,100,0))
+		strip.setPixelColor(i13, Color(0,50,0))
+		strip.setPixelColor(i14, Color(0,50,0))
+		strip.setPixelColor(i15, Color(0,50,0))
+		strip.setPixelColor(i16, Color(0,50,0))
+		strip.setPixelColor(i17, Color(0,25,0))
+		strip.setPixelColor(i18, Color(0,25,0))
+		strip.setPixelColor(i19, Color(0,25,0))
+		strip.setPixelColor(i20, Color(0,25,0))
+		strip.setPixelColor(i21, Color(0,12,0))
+		strip.setPixelColor(i22, Color(0,12,0))
+		strip.setPixelColor(i23, Color(0,12,0))
+		strip.setPixelColor(i24, Color(0,12,0))
+		strip.setPixelColor(i25, Color(0,6,0))
+		strip.setPixelColor(i26, Color(0,6,0))
+		strip.setPixelColor(i27, Color(0,6,0))
+		strip.setPixelColor(i28, Color(0,6,0))
+		strip.setPixelColor(i29, Color(0,0,0))
+		strip.show()
+		
+		i29 = i28
+		i28 = i27
+		i27 = i26
+		i26 = i25
+		i25 = i24
+		i24 = i23
+		i23 = i22
+		i22 = i21
+		i21 = i20
+		i20 = i19
+		i19 = i18
+		i18 = i17
+		i17 = i16
+		i16 = i15
+		i15 = i14
+		i14 = i13
+		i13 = i12
+		i12 = i11
+		i11 = i10
+		i10 = i9
+		i9  = i8
+		i8  = i7
+		i7  = i6
+		i6  = i5
+		i5  = i4
+		i4  = i3
+		i3  = i2
+		i2  = i1
+		i1  = i
+		
+		if i == 1:
+			dir = 1
+			i+=1
+		elif i == strip.numPixels()-1:
+			dir = 0
+			i-=1
+		elif dir == 1:
+			i+=1
+		else:
+			i-=1
+		
+		time.sleep(wait_ms/1000.0)
+	time.sleep(1)
+	
+
+def pacman(strip, wait_ms=50):
+
+	print "Pacman!"
+	
+	food_pos = []
+	# Initial positions...
+	pacman_pos = 1 # randint(1,10)
+	pacman_dir = 1 #left to right
+	redghost_pos = -80 + randint(0,19)
+	redghost2_pos = -105 + randint(0,9)
+	redghost3_pos = -120 + randint(0,9)
+	ghost_dir = 1 #left to right
+	blueghost_pos = -1000
+	blueghost2_pos = -1020
+	blueghost3_pos = -1030
+	star_pos = 140 + randint(0,6)*5
+	for i in range(0, strip.numPixels()):
+		food_pos.append(1)
+	for i in range(0, strip.numPixels()):
+		if i % 5 == 0:
+			food_pos[i] = 1
+		else:
+			food_pos[i] = 0
+	
+	# The board components...
+	pacman = 1
+	redghost = 2
+	blueghost = 3
+	food = 4
+	star = 5
+	pactime = 4
+	
+	while GPIO.input(pinButtonMode) == 0:
+		# Timer...
+		if pactime > 0:
+			pactime = pactime - 1
+		else:
+			pactime = 699
+				
+		# display board...
+		for i in range(0, strip.numPixels()):
+			if i == redghost_pos or i-1 == redghost_pos or i+1 == redghost_pos:
+				color = Color(0, 255, 0) # red
+			elif i == redghost2_pos or i-1 == redghost2_pos or i+1 == redghost2_pos:
+				color = Color(0, 255, 0) # red
+			elif i == redghost3_pos or i-1 == redghost3_pos or i+1 == redghost3_pos:
+				color = Color(0, 255, 0) # red
+			elif i == pacman_pos or i-1 == pacman_pos or i+1 == pacman_pos:
+				color = Color(255, 255, 0) # yellow
+			elif i == blueghost_pos or i-1 == blueghost_pos or i+1 == blueghost_pos:
+				color = Color(0, 0, 255) # blue
+			elif i == blueghost2_pos or i-1 == blueghost2_pos or i+1 == blueghost2_pos:
+				color = Color(0, 0, 255) # blue
+			elif i == blueghost3_pos or i-1 == blueghost3_pos or i+1 == blueghost3_pos:
+				color = Color(0, 0, 255) # blue
+			elif i == star_pos:
+				color = Color(255, 255, 255) # Bright white
+			elif food_pos[i] == 1:
+				color = Color(12, 12, 12) # white
+			else:
+				color = Color(0, 0, 0) # black
+
+			strip.setPixelColor(i, color)
+		
+		strip.show()
+		
+		# Move
+		if pactime % 3 == 0:
+			# If out of range, head back into range...
+			if pacman_dir < 0:
+				pacman_dir = 1
+			elif pacman_dir > strip.numPixels()-1:
+				pacman_dir = 0
+				
+			# Just move back & forward between end points
+			if pacman_dir == 1:
+				if pacman_pos < strip.numPixels()-1:
+					pacman_pos = pacman_pos + 1
+				else:
+					pacman_dir = 0
+			else:
+				if pacman_pos > 0:
+					pacman_pos = pacman_pos - 1
+				else:
+					pacman_dir = 1
+
+		# Red ghost runs towards pacman
+		# slightly faster than pacman
+		if pactime % 2 == 0:
+			if redghost_pos < pacman_pos:
+				redghost_pos = redghost_pos + 1
+			else:
+				redghost_pos = redghost_pos - 1
+
+			if redghost2_pos < pacman_pos:
+				redghost2_pos = redghost2_pos + 1
+			else:
+				redghost2_pos = redghost2_pos - 1
+
+			if redghost3_pos < pacman_pos:
+				redghost3_pos = redghost3_pos + 1
+			else:
+				redghost3_pos = redghost3_pos - 1
+
+		# Eat the food...
+		# (if pacman is on the board...)
+		if pacman_pos > -1 and pacman_pos < strip.numPixels()-1:
+			if food_pos[pacman_pos] == 1:
+				food_pos[pacman_pos] = 0
+			
+		# Eat the star...
+		if pacman_pos == star_pos:
+			pacman_dir = 0
+			star_pos = -1
+			blueghost_pos = redghost_pos
+			blueghost2_pos = redghost2_pos
+			blueghost3_pos = redghost3_pos
+			redghost_pos = -1000
+			redghost2_pos = -900
+			redghost3_pos = -500
+
+		# pacman eats blue ghost...
+		if pacman_pos == blueghost_pos:
+			print "Eat blue ghost"
+			blueghost_pos = -1000
+		else:
+			# Blue ghost runs away from pacman
+			# slightly slower than pacman
+			if pactime % 4 == 0:
+				if blueghost_pos < pacman_pos:
+					blueghost_pos = blueghost_pos - 1
+				else:
+					blueghost_pos = blueghost_pos + 1
+
+		if pacman_pos == blueghost2_pos:
+			print "Eat blue ghost"
+			blueghost2_pos = -1000
+		else:
+			# Blue ghost runs away from pacman
+			# slightly slower than pacman
+			if pactime % 4 == 0:
+				if blueghost2_pos < pacman_pos:
+					blueghost2_pos = blueghost2_pos - 1
+				else:
+					blueghost2_pos = blueghost2_pos + 1
+
+		if pacman_pos == blueghost3_pos:
+			print "Eat blue ghost"
+			blueghost3_pos = -1000
+		else:
+			# Blue ghost runs away from pacman
+			# slightly slower than pacman
+			if pactime % 4 == 0:
+				if blueghost3_pos < pacman_pos:
+					blueghost3_pos = blueghost3_pos - 1
+				else:
+					blueghost3_pos = blueghost3_pos + 1
+
+
+		# redghost eats pacman
+		# Send pacman off the board one way or the other...
+		if pacman_pos == redghost_pos or pacman_pos == redghost2_pos or pacman_pos == redghost3_pos:
+			if pacman_dir == 1:
+				pacman_pos = pacman_pos + 500
+			else:
+				pacman_pos = pacman_pos - 500
+
+			
+		# Re-initialise if game over
+		if (pacman_pos < 0 or pacman_pos > strip.numPixels()-1) and (redghost_pos < 0 or redghost_pos > strip.numPixels()-1) and (redghost2_pos < 0 or redghost2_pos > strip.numPixels()-1) and (redghost3_pos < 0 or redghost3_pos > strip.numPixels()-1) and (blueghost_pos < 0 or blueghost_pos > strip.numPixels()-1) and (blueghost2_pos < 0 or blueghost2_pos > strip.numPixels()-1) and (blueghost3_pos < 0 or blueghost3_pos > strip.numPixels()-1):
+			pacman_pos = 1
+			pacman_dir = 1 #left to right
+			redghost_pos = -80 + randint(0,19)
+			redghost2_pos = -105 + randint(0,9)
+			redghost3_pos = -120 + randint(0,9)
+			ghost_dir = 1 #left to right
+			blueghost_pos = -1000
+			blueghost2_pos = -1020
+			blueghost3_pos = -1030
+			star_pos = 140 + randint(0,6)*5
+			for i in range(0, strip.numPixels()):
+				food_pos.append(1)
+			for i in range(0, strip.numPixels()):
+				if i % 5 == 0:
+					food_pos[i] = 1
+				else:
+					food_pos[i] = 0
+
+			
+		time.sleep(wait_ms/1000)
+		
+	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
@@ -216,11 +572,16 @@ if __name__ == '__main__':
 	strip.begin()
 
 	print ('Press Ctrl-C to quit.')
-	# Fill with colour
-	setBrightness(255, 255, 255, brightness) # White
-	colorWipe(strip, Color(red, green,  blue),0)
+	cylon(strip, 4)
+	kitt(strip, 0)
+	pacman(strip,150)
+	
 	while True:
+		# Fill with colour
+		setBrightness(255, 255, 255, brightness) # White
+		colorWipe(strip, Color(red, green,  blue),0)
 		waitButtons()
+
 		if colour < 11:
 			setBrightness(red, green, blue, brightness)
 			colorWipe(strip, Color(red, green,  blue),0)
