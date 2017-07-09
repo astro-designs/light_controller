@@ -26,11 +26,15 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-pinButtonMinus = 17
-pinButtonPlus = 27
-pinButtonMode = 22
-pinLED = 4
+# Define the GPIO channels used for the three control buttons
+pinButtonMinus = 17 # Minus / - / Down : Controls the brightness
+pinButtonPlus = 27  # Plus / + / UP    : Controls the brightness
+pinButtonMode = 22  # Mode             : Controls the lighting mode
 
+# Define the GPIO channel used to illuminate the LED
+pinLED = 4			# Usually flashes when the buttons are being scanned
+
+# Configure the initial configuration
 LED_state = True
 brightness = 50
 colour = 0
@@ -38,13 +42,17 @@ red = 255
 green = 255
 blue = 255
 
+# Configure the GPIO functions
 GPIO.setup(pinButtonMode, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(pinButtonPlus, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(pinButtonMinus, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(pinLED, GPIO.OUT)
 
+# Illuminate the LED...
 GPIO.output(pinLED, LED_state)
 
+# Define a function to wait for the MODE button to be pressed
+# Flash the LED while waiting
 def waitMode(hold_time=0.25):
 	global LED_state
 	while GPIO.input(pinButtonMode) == False:
@@ -56,6 +64,7 @@ def waitMode(hold_time=0.25):
 	GPIO.output(pinLED, LED_state)
 	time.sleep(hold_time)
 	
+# Define a function to control the brightness
 def setBrightness(red_100, green_100, blue_100, brightness = 100):
 	global red, green, blue
 	red = int(red_100 * (brightness / 100.0))
@@ -66,6 +75,8 @@ def setBrightness(red_100, green_100, blue_100, brightness = 100):
 	if blue > 255: blue = 255
 	print ("Adjusting RGB to: ", red, green, blue)
 
+# Define a function to wait for any button to be pressed
+# Used to scan the buttons to select the lighting mode
 def waitButtons(hold_time=0.25):
 	global LED_state, brightness, red, green, blue, colour
 	while GPIO.input(pinButtonMode) == False and GPIO.input(pinButtonPlus) == False and GPIO.input(pinButtonMinus) == False:
@@ -147,6 +158,9 @@ def waitButtons(hold_time=0.25):
 	LED_state = True
 	GPIO.output(pinLED, LED_state)
 
+# Define a function to set the lighting mode to 'All White'
+# Note at maximum brightness, these LEDs can draw a lot from the PSU so
+# make sure your PSU is up to delivering a few Amps! 100 LEDs can take a good 4Amps!
 def allWhite(strip, wait_ms=50):
 	"""Fill strip with white"""
 	color = Color(255,255,255)
@@ -163,6 +177,10 @@ def colorWipe(strip, color, wait_ms=50):
 		strip.show()
 		time.sleep(wait_ms/1000.0)
 
+# Define a lighting mode to move a yellow spot left, right, left, right...
+# Don't know what a Cylon is? You're no old enough! Look it up... :o)
+# Inspired by a TV show from the 80's...
+# Alternatively, call it Tennis mode
 def cylon(strip, wait_ms=50):
 	print "The Cylons are here!"
 	dir = 1
@@ -213,7 +231,8 @@ def cylon(strip, wait_ms=50):
 		
 		time.sleep(wait_ms/1000.0)
 	time.sleep(1)
-	
+
+# Define a lighting mode inspired by another popular TV show from the 80's	
 def kitt(strip, wait_ms=50):
 	print "Hello, I'm the Knight Industries Two-Thousand!"
 	dir = 1
@@ -325,7 +344,7 @@ def kitt(strip, wait_ms=50):
 		time.sleep(wait_ms/1000.0)
 	time.sleep(1)
 	
-
+# Define a lighting mode inspired by a popular computer game from... you guessed it, the 80's!
 def pacman(strip, wait_ms=50):
 
 	print "Pacman!"
@@ -358,13 +377,20 @@ def pacman(strip, wait_ms=50):
 	star = 5
 	pactime = 4
 	
+	# Wait for the Mode button to be pressed
 	while GPIO.input(pinButtonMode) == 0:
 		# Timer...
 		if pactime > 0:
 			pactime = pactime - 1
 		else:
 			pactime = 699
-				
+
+		print("Star pos: ", star_pos)
+		print randint(0,6)
+		print("Red Ghost #1 pos: ", redghost_pos)
+		print("Red Ghost #2 pos: ", redghost2_pos)
+		print("Red Ghost #3 pos: ", redghost3_pos)
+		
 		# display board...
 		for i in range(0, strip.numPixels()):
 			if i == redghost_pos or i-1 == redghost_pos or i+1 == redghost_pos:
@@ -516,6 +542,7 @@ def pacman(strip, wait_ms=50):
 
 			
 		time.sleep(wait_ms/1000)
+	time.sleep(1)
 		
 	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
@@ -528,6 +555,7 @@ def theaterChase(strip, color, wait_ms=50, iterations=10):
 			time.sleep(wait_ms/1000.0)
 			for i in range(0, strip.numPixels(), 3):
 				strip.setPixelColor(i+q, 0)
+				
 
 def wheel(pos):
 	"""Generate rainbow colors across 0-255 positions."""
@@ -539,26 +567,48 @@ def wheel(pos):
 	else:
 		pos -= 170
 		return Color(0, pos * 3, 255 - pos * 3)
+		
 
 def rainbow(strip, wait_ms=20, iterations=1):
 	"""Draw rainbow that fades across all pixels at once."""
-	for j in range(256*iterations):
+	#for j in range(256*iterations):
+	# Wait for the Mode button to be pressed
+	j = 0
+	while GPIO.input(pinButtonMode) == 0:
 		for i in range(strip.numPixels()):
 			strip.setPixelColor(i, wheel((i+j) & 255))
 		strip.show()
 		time.sleep(wait_ms/1000.0)
+		if j < (256*iterations)-1:
+			j += 1
+		else:
+			j = 0
+	time.sleep(1)
+	
 
 def rainbowCycle(strip, wait_ms=20, iterations=5):
 	"""Draw rainbow that uniformly distributes itself across all pixels."""
-	for j in range(256*iterations):
+	#for j in range(256*iterations):
+	# Wait for the Mode button to be pressed
+	j = 0
+	while GPIO.input(pinButtonMode) == 0:
 		for i in range(strip.numPixels()):
 			strip.setPixelColor(i, wheel((int(i * 256 / strip.numPixels()) + j) & 255))
 		strip.show()
 		time.sleep(wait_ms/1000.0)
+		if j < (256*iterations)-1:
+			j += 1
+		else:
+			j = 0
+	time.sleep(1)
+	
 
 def theaterChaseRainbow(strip, wait_ms=50):
 	"""Rainbow movie theater light style chaser animation."""
-	for j in range(256):
+	#for j in range(256):
+	# Wait for the Mode button to be pressed
+	j = 0
+	while GPIO.input(pinButtonMode) == 0:
 		for q in range(3):
 			for i in range(0, strip.numPixels(), 3):
 				strip.setPixelColor(i+q, wheel((i+j) % 255))
@@ -566,6 +616,11 @@ def theaterChaseRainbow(strip, wait_ms=50):
 			time.sleep(wait_ms/1000.0)
 			for i in range(0, strip.numPixels(), 3):
 				strip.setPixelColor(i+q, 0)
+		if j < 255:
+			j += 1
+		else:
+			j = 0
+	time.sleep(1)
 
 
 # Main program logic follows:
@@ -580,11 +635,11 @@ if __name__ == '__main__':
 	cylon(strip, 4)
 	kitt(strip, 0)
 	pacman(strip,150)
+	rainbow(strip)
+	rainbowCycle(strip)
+	theaterChaseRainbow(strip)
 	
 	while True:
-		# Fill with colour
-		setBrightness(255, 255, 255, brightness) # White
-		colorWipe(strip, Color(red, green,  blue),0)
 		waitButtons()
 
 		if colour < 11:
