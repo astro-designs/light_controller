@@ -9,6 +9,7 @@
 # Plus & Minus buttons add brightness a level of brightness control to some patterns
 
 import RPi.GPIO as GPIO
+import sys
 import time
 from random import randint
 
@@ -34,6 +35,13 @@ pinButtonMode = 22  # Mode             : Controls the lighting mode
 # Define the GPIO channel used to illuminate the LED
 pinLED = 4			# Usually flashes when the buttons are being scanned
 
+#Define the GPIO channel used to interrupt / kill the program
+pinEXTCTRL = 23
+
+while GPIO.gpio_function(LED_PIN) == GPIO.HARD_PWM:
+	print ("Waiting for PWM pin to be released...")
+	time.sleep(1)
+
 # Configure the initial configuration
 LED_state = True
 brightness = 50
@@ -51,11 +59,27 @@ GPIO.setup(pinLED, GPIO.OUT)
 # Illuminate the LED...
 GPIO.output(pinLED, LED_state)
 
+# Define a function to check for the mode pin to be set
+# and to check if the EXTCTRL pin has been set to something other than '1'
+def checkModeExt():
+	if GPIO.gpio_function(pinEXTCTRL) == 0:
+		mode_sts = True
+		#GPIO.setup(LED_PIN, GPIO.IN)
+		GPIO.setup(pinEXTCTRL, GPIO.IN)
+		#GPIO.cleanup()
+		#sys.exit(130)
+	else:
+		mode_sts = GPIO.input(pinButtonMode)
+	#print (mode_sts)
+	return (mode_sts)
+
+
 # Define a function to wait for the MODE button to be pressed
 # Flash the LED while waiting
 def waitMode(hold_time=0.25):
 	global LED_state
-	while GPIO.input(pinButtonMode) == False:
+	#while GPIO.input(pinButtonMode) == False:
+	while GPIO.gpio_function(pinEXTCTRL) == 1:
 		LED_state = not LED_state
 		GPIO.output(pinLED, LED_state)
 		time.sleep(0.25)
@@ -195,7 +219,8 @@ def cylon(strip, wait_ms=50):
 	i8 = 2
 	i9 = 1
 	
-	while GPIO.input(pinButtonMode) == 0:
+	#while GPIO.input(pinButtonMode) == 0:
+	while checkModeExt() == False:
 		strip.setPixelColor(i,  Color(16,16,16))
 		strip.setPixelColor(i1, Color(32,32,0))
 		strip.setPixelColor(i2, Color(64,64,0))
@@ -267,7 +292,8 @@ def kitt(strip, wait_ms=50):
 	i28 = 2
 	i29 = 1
 	
-	while GPIO.input(pinButtonMode) == 0:
+	#while GPIO.input(pinButtonMode) == 0:
+	while checkModeExt() == False:
 		strip.setPixelColor(i,   Color(0,255,0))
 		strip.setPixelColor(i1,  Color(0,255,0))
 		strip.setPixelColor(i2,  Color(0,255,0))
@@ -378,18 +404,19 @@ def pacman(strip, wait_ms=50):
 	pactime = 4
 	
 	# Wait for the Mode button to be pressed
-	while GPIO.input(pinButtonMode) == 0:
+	#while GPIO.input(pinButtonMode) == 0:
+	while checkModeExt() == False:
 		# Timer...
 		if pactime > 0:
 			pactime = pactime - 1
 		else:
 			pactime = 699
 
-		print("Star pos: ", star_pos)
-		print randint(0,6)
-		print("Red Ghost #1 pos: ", redghost_pos)
-		print("Red Ghost #2 pos: ", redghost2_pos)
-		print("Red Ghost #3 pos: ", redghost3_pos)
+		#print("Star pos: ", star_pos)
+		#print randint(0,6)
+		#print("Red Ghost #1 pos: ", redghost_pos)
+		#print("Red Ghost #2 pos: ", redghost2_pos)
+		#print("Red Ghost #3 pos: ", redghost3_pos)
 		
 		# display board...
 		for i in range(0, strip.numPixels()):
@@ -460,10 +487,12 @@ def pacman(strip, wait_ms=50):
 		# (if pacman is on the board...)
 		if pacman_pos > -1 and pacman_pos < strip.numPixels()-1:
 			if food_pos[pacman_pos] == 1:
+				print ("Yum")
 				food_pos[pacman_pos] = 0
 			
 		# Eat the star...
 		if pacman_pos == star_pos:
+			print ("Yum!!! A pill!")
 			pacman_dir = 0
 			star_pos = -1
 			blueghost_pos = redghost_pos
@@ -475,7 +504,7 @@ def pacman(strip, wait_ms=50):
 
 		# pacman eats blue ghost...
 		if pacman_pos == blueghost_pos:
-			print "Eat blue ghost"
+			print "YUM!!! Eat blue ghost"
 			blueghost_pos = -1000
 		else:
 			# Blue ghost runs away from pacman
@@ -487,7 +516,7 @@ def pacman(strip, wait_ms=50):
 					blueghost_pos = blueghost_pos + 1
 
 		if pacman_pos == blueghost2_pos:
-			print "Eat blue ghost"
+			print "YUM!!! Eat blue ghost"
 			blueghost2_pos = -1000
 		else:
 			# Blue ghost runs away from pacman
@@ -499,7 +528,7 @@ def pacman(strip, wait_ms=50):
 					blueghost2_pos = blueghost2_pos + 1
 
 		if pacman_pos == blueghost3_pos:
-			print "Eat blue ghost"
+			print "YUM!!! Eat blue ghost"
 			blueghost3_pos = -1000
 		else:
 			# Blue ghost runs away from pacman
@@ -514,6 +543,7 @@ def pacman(strip, wait_ms=50):
 		# redghost eats pacman
 		# Send pacman off the board one way or the other...
 		if pacman_pos == redghost_pos or pacman_pos == redghost2_pos or pacman_pos == redghost3_pos:
+			print ("Arrrrgh!!!")
 			if pacman_dir == 1:
 				pacman_pos = pacman_pos + 500
 			else:
@@ -545,32 +575,6 @@ def pacman(strip, wait_ms=50):
 	time.sleep(1)
 		
 	
-
-# Define a lighting mode inspired by one of the first ever computer games... Pong! Playable ;o)
-def pong(strip, wait_ms=50):
-# Initialise everything...
-#   Ball position
-#   ball x_speed
-#   ball y_speed
-#   bat1 position
-#   bat2 position
-# while mode button has not been pressed...
-# Colour bat1
-# Colour bat2
-# Colour the ball
-# Draw the board...
-# Ball dynamics...
-#   x_speed
-#   y_speed
-#   if it hits a bat, x_speed = -x_speed
-#   if it hits the top or bottom, y_speed = -y_speed
-#   Turn ball_speed & prev position into new position
-# Check for bat movement
-# Check for out-of-play
-#   Flash the display
-#   Adjust score
-# Re-inisialise ball position
-	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
@@ -600,7 +604,8 @@ def rainbow(strip, wait_ms=20, iterations=1):
 	#for j in range(256*iterations):
 	# Wait for the Mode button to be pressed
 	j = 0
-	while GPIO.input(pinButtonMode) == 0:
+	#while GPIO.input(pinButtonMode) == 0:
+	while checkModeExt() == False:
 		for i in range(strip.numPixels()):
 			strip.setPixelColor(i, wheel((i+j) & 255))
 		strip.show()
@@ -617,7 +622,8 @@ def rainbowCycle(strip, wait_ms=20, iterations=5):
 	#for j in range(256*iterations):
 	# Wait for the Mode button to be pressed
 	j = 0
-	while GPIO.input(pinButtonMode) == 0:
+	#while GPIO.input(pinButtonMode) == 0:
+	while checkModeExt() == False:
 		for i in range(strip.numPixels()):
 			strip.setPixelColor(i, wheel((int(i * 256 / strip.numPixels()) + j) & 255))
 		strip.show()
@@ -634,7 +640,8 @@ def theaterChaseRainbow(strip, wait_ms=50):
 	#for j in range(256):
 	# Wait for the Mode button to be pressed
 	j = 0
-	while GPIO.input(pinButtonMode) == 0:
+	#while GPIO.input(pinButtonMode) == 0:
+	while checkModeExt() == False:
 		for q in range(3):
 			for i in range(0, strip.numPixels(), 3):
 				strip.setPixelColor(i+q, wheel((i+j) % 255))
@@ -650,8 +657,13 @@ def theaterChaseRainbow(strip, wait_ms=50):
 
 
 # Main program logic follows:
-if __name__ == '__main__':
+#if __name__ == '__main__':
+try:
 	global red, green, blue, brightness, colour
+
+	# Check if PWM pin is already being used...
+	# Wait for it to be released...
+
 	# Create NeoPixel object with appropriate configuration.
 	strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
 	# Intialize the library (must be called once before other functions).
@@ -683,3 +695,10 @@ if __name__ == '__main__':
 			rainbow(strip)
 			rainbowCycle(strip)
 			theaterChaseRainbow(strip)
+
+except KeyboardInterrupt:
+	print "Keyboard Interrupt (ctrl-c) - exiting program loop"
+	GPIO.setup(LED_PIN, GPIO.IN)
+
+finally:
+	GPIO.cleanup()
