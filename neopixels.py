@@ -545,6 +545,32 @@ def pacman(strip, wait_ms=50):
 	time.sleep(1)
 		
 	
+
+# Define a lighting mode inspired by one of the first ever computer games... Pong! Playable ;o)
+def pong(strip, wait_ms=50):
+# Initialise everything...
+#   Ball position
+#   ball x_speed
+#   ball y_speed
+#   bat1 position
+#   bat2 position
+# while mode button has not been pressed...
+# Colour bat1
+# Colour bat2
+# Colour the ball
+# Draw the board...
+# Ball dynamics...
+#   x_speed
+#   y_speed
+#   if it hits a bat, x_speed = -x_speed
+#   if it hits the top or bottom, y_speed = -y_speed
+#   Turn ball_speed & prev position into new position
+# Check for bat movement
+# Check for out-of-play
+#   Flash the display
+#   Adjust score
+# Re-inisialise ball position
+	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
