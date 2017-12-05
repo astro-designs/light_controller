@@ -5,15 +5,16 @@
 # Originally based on NeoPixel library strandtest example by Tony DiCola
 # Direct port of the Arduino NeoPixel library strandtest example.
 
+# Plus & Minus buttons change the level of brightness on some patterns
 # Mode button allows some rudimentary control over the strand 'pattern'
-# Plus & Minus buttons add brightness a level of brightness control to some patterns
+# Hold the Mode button while pressing Plus or Minus to change the pattern
 
 import RPi.GPIO as GPIO
 import sys
 import time
 from random import randint
-
 from neopixel import *
+from array import *
 
 
 # LED strip configuration:
@@ -38,14 +39,15 @@ pinLED = 4			# Usually flashes when the buttons are being scanned
 #Define the GPIO channel used to interrupt / kill the program
 pinEXTCTRL = 23
 
-while GPIO.gpio_function(LED_PIN) == GPIO.HARD_PWM:
-	print ("Waiting for PWM pin to be released...")
-	time.sleep(1)
+#while GPIO.gpio_function(LED_PIN) == GPIO.HARD_PWM:
+#	print ("Waiting for PWM pin to be released...")
+#	time.sleep(1)
 
 # Configure the initial configuration
 LED_state = True
 brightness = 50
-colour = 0
+LightingMode = 15 #Initial mode ("Clear Blue Sky")
+UpdateRequired = True
 red = 255
 green = 255
 blue = 255
@@ -62,6 +64,8 @@ GPIO.output(pinLED, LED_state)
 # Define a function to check for the mode pin to be set
 # and to check if the EXTCTRL pin has been set to something other than '1'
 def checkModeExt():
+	global LightingMode, brightness, UpdateRequired
+	mode_sts = False
 	if GPIO.gpio_function(pinEXTCTRL) == 0:
 		mode_sts = True
 		#GPIO.setup(LED_PIN, GPIO.IN)
@@ -69,25 +73,42 @@ def checkModeExt():
 		#GPIO.cleanup()
 		#sys.exit(130)
 	else:
-		mode_sts = GPIO.input(pinButtonMode)
-	#print (mode_sts)
+		if GPIO.input(pinButtonMode):
+			if GPIO.input(pinButtonMinus):
+				if LightingMode > 0:
+					mode_sts = True
+					LightingMode = LightingMode - 1
+					UpdateRequired = True
+					print("LightingMode: ", LightingMode)
+					time.sleep(0.25)
+				
+			elif GPIO.input(pinButtonPlus):
+				if LightingMode < 23:
+					mode_sts = True
+					LightingMode = LightingMode + 1
+					UpdateRequired = True
+					print("LightingMode: ", LightingMode)
+					time.sleep(0.25)			
+			
+		else:
+			if GPIO.input(pinButtonPlus) == True:
+				if brightness < 100:
+					brightness = brightness + 10
+					UpdateRequired = True
+				else: brightness = 100
+				#print ("Brightness = ", brightness)
+				time.sleep(1)
+		
+			if GPIO.input(pinButtonMinus) == True:
+				if brightness > 0:
+					brightness = brightness - 10
+					UpdateRequired = True
+				else: brightness = 0
+				#print ("Brightness = ", brightness)
+				time.sleep(1)
+        
 	return (mode_sts)
 
-
-# Define a function to wait for the MODE button to be pressed
-# Flash the LED while waiting
-def waitMode(hold_time=0.25):
-	global LED_state
-	#while GPIO.input(pinButtonMode) == False:
-	while GPIO.gpio_function(pinEXTCTRL) == 1:
-		LED_state = not LED_state
-		GPIO.output(pinLED, LED_state)
-		time.sleep(0.25)
-
-	LED_State = True
-	GPIO.output(pinLED, LED_state)
-	time.sleep(hold_time)
-	
 # Define a function to control the brightness
 def setBrightness(red_100, green_100, blue_100, brightness = 100):
 	global red, green, blue
@@ -97,90 +118,7 @@ def setBrightness(red_100, green_100, blue_100, brightness = 100):
 	if red > 255: red = 255
 	if green > 255: green = 255
 	if blue > 255: blue = 255
-	print ("Adjusting RGB to: ", red, green, blue)
-
-# Define a function to wait for any button to be pressed
-# Used to scan the buttons to select the lighting mode
-def waitButtons(hold_time=0.25):
-	global LED_state, brightness, red, green, blue, colour
-	while GPIO.input(pinButtonMode) == False and GPIO.input(pinButtonPlus) == False and GPIO.input(pinButtonMinus) == False:
-		LED_state = not LED_state
-		GPIO.output(pinLED, LED_state)
-		time.sleep(hold_time)
-
-	if GPIO.input(pinButtonPlus) == True:
-		if brightness < 100:
-			brightness = brightness + 10
-		else: brightness = 100
-		#print ("Brightness = ", brightness)
-		time.sleep(hold_time)
-		
-	if GPIO.input(pinButtonMinus) == True:
-		if brightness > 0:
-			brightness = brightness - 10
-		else: brightness = 0
-		#print ("Brightness = ", brightness)
-		time.sleep(hold_time)
-        
-	if GPIO.input(pinButtonMode) == True:
-		if colour < 15:
-			colour = colour + 1
-		else: colour = 0
-		#print ("Colour =", colour)
-		time.sleep(hold_time)
-
-	if colour == 0: # White
-		red = 255
-		green = 255
-		blue = 255
-	elif colour == 1: # Candle
-		red = 255
-		green = 147
-		blue = 41
-	elif colour == 2: # Tungsten
-		red = 255
-		green = 214
-		blue = 170
-	elif colour == 3: # Halogen
-		red = 255
-		green = 241
-		blue = 224
-	elif colour == 4: # Overcast
-		red = 201
-		green = 226
-		blue = 255
-	elif colour == 5: # Clear Blue Sky
-		red = 64
-		green = 156
-		blue = 255
-	elif colour == 6: # Yellow
-		red = 0
-		green = 255
-		blue = 255
-	elif colour == 7: # Cyan
-		red = 255
-		green = 255
-		blue = 0
-	elif colour == 8: # Green
-		red = 0
-		green = 255
-		blue = 0
-	elif colour == 9: # Magenta
-		red = 255
-		green = 0
-		blue = 255
-	elif colour == 10: # Blue
-		red = 0
-		green = 0
-		blue = 255
-	elif colour == 11: # Red
-		red = 255
-		green = 0
-		blue = 0
-
-	print red, green, blue, brightness
-	LED_state = True
-	GPIO.output(pinLED, LED_state)
+	#print ("Adjusting RGB to: ", red, green, blue)
 
 # Define a function to set the lighting mode to 'All White'
 # Note at maximum brightness, these LEDs can draw a lot from the PSU so
@@ -201,8 +139,8 @@ def colorWipe(strip, color, wait_ms=50):
 		strip.show()
 		time.sleep(wait_ms/1000.0)
 
-# Define a lighting mode to move a yellow spot left, right, left, right...
-# Don't know what a Cylon is? You're no old enough! Look it up... :o)
+# Define a lighting mode to move a red spot left, right, left, right...
+# Don't know what a Cylon is? You're not old enough! Look it up... :o)
 # Inspired by a TV show from the 80's...
 # Alternatively, call it Tennis mode
 def cylon(strip, wait_ms=50):
@@ -222,14 +160,14 @@ def cylon(strip, wait_ms=50):
 	#while GPIO.input(pinButtonMode) == 0:
 	while checkModeExt() == False:
 		strip.setPixelColor(i,  Color(16,16,16))
-		strip.setPixelColor(i1, Color(32,32,0))
-		strip.setPixelColor(i2, Color(64,64,0))
-		strip.setPixelColor(i3, Color(200,200,0))
-		strip.setPixelColor(i4, Color(255,255,0))
-		strip.setPixelColor(i5, Color(255,255,0))
-		strip.setPixelColor(i6, Color(200,200,0))
-		strip.setPixelColor(i7, Color(64,64,0))
-		strip.setPixelColor(i8, Color(32,32,0))
+		strip.setPixelColor(i1, Color(0,32,0))
+		strip.setPixelColor(i2, Color(0,64,0))
+		strip.setPixelColor(i3, Color(0,200,0))
+		strip.setPixelColor(i4, Color(0,255,0))
+		strip.setPixelColor(i5, Color(0,255,0))
+		strip.setPixelColor(i6, Color(0,200,0))
+		strip.setPixelColor(i7, Color(0,64,0))
+		strip.setPixelColor(i8, Color(0,32,0))
 		strip.setPixelColor(i9, Color(16,16,16))
 		strip.show()
 		
@@ -574,6 +512,82 @@ def pacman(strip, wait_ms=50):
 		time.sleep(wait_ms/1000)
 	time.sleep(1)
 		
+def ChristmasLights(strip, wait_ms=50):
+# Create a strip of randomly coloured lights...
+
+	global red, green, blue
+	
+	brightness_array = []
+	col = []
+	for i in range(0, strip.numPixels()):
+		brightness_array.append(1)
+		col.append(1)
+
+	# Initialise colour & brightness arrays...	
+	for i in range(0, strip.numPixels()):
+		brightness_array[i] = randint(0,50) - 25
+		col[i] = randint(0,7)
+
+	while checkModeExt() == False:
+			
+		for i in range(0, strip.numPixels()):
+			if brightness_array[i] >= 25:
+				brightness_array[i] = -25
+			else:
+				brightness_array[i] = brightness_array[i] + 1
+				
+			if brightness_array[i] == 0:
+				col[i] = randint(0,7)
+			
+			if col[i] == 0:   # White
+				red = 255
+				green = 255
+				blue = 255
+			elif col[i] == 1: # Yellow
+				red = 0
+				green = 255
+				blue = 255
+			elif col[i] == 2: # Cyan
+				red = 255
+				green = 255
+				blue = 0
+			elif col[i] == 3: # Green
+				red = 0
+				green = 255
+				blue = 0
+			elif col[i] == 4: # Magenta
+				red = 255
+				green = 0
+				blue = 255
+			elif col[i] == 5: # Blue
+				red = 0
+				green = 0
+				blue = 255
+			elif col[i] == 6: # Red
+				red = 255
+				green = 0
+				blue = 0
+			else:             # Grey
+				red = 128
+				green = 128
+				blue = 128
+
+			brightness = abs(brightness_array[i]) * 4
+			setBrightness(red, green, blue, brightness)
+			strip.setPixelColor(i, Color(red, green, blue))
+			# Debug...
+			#if i == 53:
+			#	print brightness_array[i]
+			#	print brightness
+			#	print col[i]
+			#	print red
+			#	print green
+			#	print blue
+	
+		strip.show()
+		time.sleep(wait_ms/1000.0)
+
+
 	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
@@ -659,7 +673,7 @@ def theaterChaseRainbow(strip, wait_ms=50):
 # Main program logic follows:
 #if __name__ == '__main__':
 try:
-	global red, green, blue, brightness, colour
+	global red, green, blue, brightness, LightingMode, UpdateRequired
 
 	# Check if PWM pin is already being used...
 	# Wait for it to be released...
@@ -670,31 +684,132 @@ try:
 	strip.begin()
 
 	print ('Press Ctrl-C to quit.')
-	cylon(strip, 4)
-	kitt(strip, 0)
-	pacman(strip,150)
-	rainbow(strip)
-	rainbowCycle(strip)
-	theaterChaseRainbow(strip)
 	
 	while True:
-		waitButtons()
 
-		if colour < 11:
-			setBrightness(red, green, blue, brightness)
-			colorWipe(strip, Color(red, green,  blue),0)
-		else:
-			# Theater chase animations.
-			theaterChase(strip, Color(127, 127, 127))  # White theater chase
-			#waitMode()
-			theaterChase(strip, Color(127,   0,   0))  # Red theater chase
-			#waitMode()
-			theaterChase(strip, Color(  0,   0, 127))  # Blue theater chase
-			#waitMode()
-			# Rainbow animations.
-			rainbow(strip)
-			rainbowCycle(strip)
-			theaterChaseRainbow(strip)
+		#if LightingMode < 12 and UpdateRequired:
+		#	print ("Updating...")
+		#	setBrightness(red, green, blue, brightness)
+		#	colorWipe(strip, Color(green, red,  blue),0)
+		#	UpdateRequired = False
+
+		if LightingMode < 12:
+			checkModeExt()
+
+		if UpdateRequired:
+			print ("Updating...")
+			# Reset UpdateRequired to stop this loop repeating
+			UpdateRequired = False
+			if LightingMode == 0: # White
+				#brightness = 50
+				red = 255
+				green = 255
+				blue = 255
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 1: # Candle
+				#brightness = 50
+				red = 255
+				green = 147
+				blue = 41
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 2: # Tungsten
+				#brightness = 50
+				red = 255
+				green = 214
+				blue = 170
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 3: # Halogen
+				#brightness = 50
+				red = 255
+				green = 241
+				blue = 224
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 4: # Overcast
+				#brightness = 50
+				red = 201
+				green = 226
+				blue = 255
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 5: # Clear Blue Sky
+				#brightness = 50
+				red = 64
+				green = 156
+				blue = 255
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 6: # Yellow
+				#brightness = 50
+				red = 0
+				green = 255
+				blue = 255
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 7: # Cyan
+				#brightness = 50
+				red = 255
+				green = 255
+				blue = 0
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 8: # Green
+				#brightness = 50
+				red = 0
+				green = 255
+				blue = 0
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 9: # Magenta
+				#brightness = 50
+				red = 255
+				green = 0
+				blue = 255
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 10: # Blue
+				#brightness = 50
+				red = 0
+				green = 0
+				blue = 255
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 11: # Red
+				#brightness = 50
+				red = 255
+				green = 0
+				blue = 0
+				setBrightness(red, green, blue, brightness)
+				colorWipe(strip, Color(green, red,  blue),0)
+			elif LightingMode == 12:
+				cylon(strip, 4)
+			elif LightingMode == 13:
+				kitt(strip, 0)
+			elif LightingMode == 14:
+				pacman(strip,150)
+			elif LightingMode == 15:
+				ChristmasLights(strip,30)
+				#rainbow(strip)
+			elif LightingMode == 16:
+				rainbowCycle(strip)
+			elif LightingMode == 17:
+				theaterChaseRainbow(strip)
+			elif LightingMode == 18:
+				theaterChase(strip, Color(127, 127, 127))  # White theater chase
+			elif LightingMode == 19:
+				theaterChase(strip, Color(127,   0,   0))  # Red theater chase
+			elif LightingMode == 20:
+				theaterChase(strip, Color(  0,   0, 127))  # Blue theater chase
+			elif LightingMode == 21:
+				# Rainbow animations.
+				rainbow(strip)
+			elif LightingMode == 22:
+				rainbowCycle(strip)
+			elif LightingMode == 23:
+				theaterChaseRainbow(strip)
 
 except KeyboardInterrupt:
 	print "Keyboard Interrupt (ctrl-c) - exiting program loop"
