@@ -39,9 +39,9 @@ pinLED = 4			# Usually flashes when the buttons are being scanned
 #Define the GPIO channel used to interrupt / kill the program
 pinEXTCTRL = 23
 
-#while GPIO.gpio_function(LED_PIN) == GPIO.HARD_PWM:
-#	print ("Waiting for PWM pin to be released...")
-#	time.sleep(1)
+while GPIO.gpio_function(LED_PIN) == GPIO.HARD_PWM:
+	print ("Waiting for PWM pin to be released...")
+	time.sleep(1)
 
 # Configure the initial configuration
 LED_state = True
@@ -526,7 +526,7 @@ def ChristmasLights(strip, wait_ms=50):
 	# Initialise colour & brightness arrays...	
 	for i in range(0, strip.numPixels()):
 		brightness_array[i] = randint(0,50) - 25
-		col[i] = randint(0,7)
+		col[i] = 8
 
 	while checkModeExt() == False:
 			
@@ -567,10 +567,14 @@ def ChristmasLights(strip, wait_ms=50):
 				red = 255
 				green = 0
 				blue = 0
-			else:             # Grey
+			elif col[i] == 7: # Grey
 				red = 128
 				green = 128
 				blue = 128
+			else:             # Black
+				red = 0
+				green = 0
+				blue = 0
 
 			brightness = abs(brightness_array[i]) * 4
 			setBrightness(red, green, blue, brightness)
