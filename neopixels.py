@@ -15,6 +15,8 @@ import time
 from random import randint
 from neopixel import *
 from array import *
+import urllib2
+import json
 
 
 # LED strip configuration:
@@ -44,9 +46,10 @@ while GPIO.gpio_function(LED_PIN) == GPIO.HARD_PWM:
 	time.sleep(1)
 
 # Configure the initial configuration
+global brighness, LightingMode, UpdateRequired, red, green, blue
 LED_state = True
 brightness = 50
-LightingMode = 15 #Initial mode ("Clear Blue Sky")
+LightingMode = 12 #Initial mode
 UpdateRequired = True
 red = 255
 green = 255
@@ -60,6 +63,58 @@ GPIO.setup(pinLED, GPIO.OUT)
 
 # Illuminate the LED...
 GPIO.output(pinLED, LED_state)
+
+# Cheerlights stuff...
+
+urlRoot = "http://api.thingspeak.com/channels/1417/"
+namesToRGB = {'red':        Color(255,  0,  0),
+    		'green':        Color(  0,128,  0),
+    		'blue':         Color(  0,  0,255),
+    		'cyan':         Color(  0,255,255),
+    		'white':        Color(255,255,255),
+    		'warmwhite':    Color(253,245,230),
+    		'grey':         Color(128,128,128),
+    		'purple':       Color(128,  0,128),
+    		'magenta':      Color(255,  0,255),
+    		'yellow':       Color(255,255,  0),
+    		'orange':       Color(255,165,  0),
+    		'pink':         Color(255,192,203),
+    		'candle':       Color(255,147, 41),
+    		'tungsten':     Color(255,214,170),
+    		'halogen':      Color(255,241,224),
+    		'overcast':     Color(201,226,255),
+    		'clearbluesky': Color( 64,156,255),
+    		'oldlace':      Color(253,245,230)}
+
+#retrieve and load the JSON data into a JSON object
+def getJSON(url):
+    jsonFeed = urllib2.urlopen(urlRoot + url)
+    feedData = jsonFeed.read()
+    #print feedData
+    jsonFeed.close()
+
+    data = json.loads(feedData)
+    return data
+
+#use the JSON object to identify the colour in use,
+#update the last entry_id processed
+def parseColour(feedItem):
+    global lastID
+    global pixels
+    #print feed["created_at"], feed["field1"]
+    for name in namesToRGB.keys():
+        if feedItem["field1"] == name:
+            print name
+            color = namesToRGB[name]
+            print color
+            for i in range(strip.numPixels()):
+                strip.setPixelColor(i,color)
+
+    lastID = getEntryID(feedItem)
+
+#read the last entry_id
+def getEntryID(feedItem):
+    return int(feedItem["entry_id"])            
 
 # Define a function to check for the mode pin to be set
 # and to check if the EXTCTRL pin has been set to something other than '1'
@@ -120,12 +175,23 @@ def setBrightness(red_100, green_100, blue_100, brightness = 100):
 	if blue > 255: blue = 255
 	#print ("Adjusting RGB to: ", red, green, blue)
 
+# Define a function to set the lighting mode to 'All Off'
+def allBlack(strip, wait_ms=50):
+	"""Fill strip with black"""
+	color = Color(0,0,0)
+	print ('Colour (R, G, B): ', color)
+	for i in range(strip.numPixels()):
+		strip.setPixelColor(i,color)
+		strip.show()
+		time.sleep(wait_ms/1000.0)
+
 # Define a function to set the lighting mode to 'All White'
 # Note at maximum brightness, these LEDs can draw a lot from the PSU so
 # make sure your PSU is up to delivering a few Amps! 100 LEDs can take a good 4Amps!
 def allWhite(strip, wait_ms=50):
 	"""Fill strip with white"""
-	color = Color(255,255,255)
+	#color = Color(255,255,255)
+    color = namesToRGB['white']
 	for i in range(strip.numPixels()):
 		strip.setPixelColor(i,color)
 		strip.show()
@@ -591,7 +657,23 @@ def ChristmasLights(strip, wait_ms=50):
 		strip.show()
 		time.sleep(wait_ms/1000.0)
 
+def cheerlights(strip, wait_ms=1000):
 
+    #process the currently available list of colours
+    data = getJSON("feed.json")
+    for feedItem in data["feeds"]:
+        parseColour(feedItem)
+    strip.show()
+
+    while checkModeExt() == False:
+        data = getJSON("field/1/last.json")
+    
+        if getEntryID(data) > lastID:   #Has this entry_id been processed before?
+            parseColour(data)
+            time.sleep(5)
+            strip.show()
+        else:
+            time.sleep(wait_ms/1000.0)
 	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
@@ -688,6 +770,14 @@ try:
 	strip.begin()
 
 	print ('Press Ctrl-C to quit.')
+
+    # Clear any existing colour - set to black...
+	allBlack(strip, 50)
+	
+	if len(sys.argv) > 1:
+		LightingMode = int(sys.argv[1])
+	
+	print ('Lighting Mode: ', LightingMode)
 	
 	while True:
 
@@ -789,34 +879,35 @@ try:
 				setBrightness(red, green, blue, brightness)
 				colorWipe(strip, Color(green, red,  blue),0)
 			elif LightingMode == 12:
-				cylon(strip, 4)
+				cylon(strip, 10)
 			elif LightingMode == 13:
-				kitt(strip, 0)
+				kitt(strip, 10)
 			elif LightingMode == 14:
-				pacman(strip,150)
-			elif LightingMode == 15:
 				ChristmasLights(strip,30)
-				#rainbow(strip)
+			elif LightingMode == 15:
+				theaterChaseRainbow(strip)
 			elif LightingMode == 16:
 				rainbowCycle(strip)
 			elif LightingMode == 17:
-				theaterChaseRainbow(strip)
+				cheerlights(strip,1000)
 			elif LightingMode == 18:
-				theaterChase(strip, Color(127, 127, 127))  # White theater chase
+				pacman(strip,150)
 			elif LightingMode == 19:
-				theaterChase(strip, Color(127,   0,   0))  # Red theater chase
+				theaterChase(strip, Color(127, 127, 127))  # White theater chase
 			elif LightingMode == 20:
-				theaterChase(strip, Color(  0,   0, 127))  # Blue theater chase
+				theaterChase(strip, Color(127,   0,   0))  # Red theater chase
 			elif LightingMode == 21:
-				# Rainbow animations.
-				rainbow(strip)
+				theaterChase(strip, Color(  0,   0, 127))  # Blue theater chase
 			elif LightingMode == 22:
-				rainbowCycle(strip)
+				rainbow(strip)
 			elif LightingMode == 23:
+				rainbowCycle(strip)
+			elif LightingMode == 24:
 				theaterChaseRainbow(strip)
 
 except KeyboardInterrupt:
 	print "Keyboard Interrupt (ctrl-c) - exiting program loop"
+	allBlack(strip, 50)
 	GPIO.setup(LED_PIN, GPIO.IN)
 
 finally:
