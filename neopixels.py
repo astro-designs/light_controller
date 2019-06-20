@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 import sys
 import time
 from random import randint
-from neopixel import *
+from rpi_ws281x import __version__ as __rpi_ws281x__, PixelStrip, Color
 from array import *
 import urllib2
 import json
@@ -55,6 +55,14 @@ red = 255
 green = 255
 blue = 255
 
+# Lookup LightingMode names...
+ModeLookup = ["White", "Candle", "Tungsten", "Halogen", "Overcast", "ClearBlueSky",
+              "Yellow", "Cyan", "Green", "Magenta", "Blue", "Red",
+              "Cylon", "KnightRider", "TwinkleColours",
+              "TheaterChaseRainbow", "RainbowCycle", "CheerLights", "Pacman",
+              "TheaterChaseWhite", "TheaterChaseRed", "TheaterChaseBlue",
+              "Rainbow", "RainbowCycle", "TheaterChaseRainbow"]           
+
 # Configure the GPIO functions
 GPIO.setup(pinButtonMode, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(pinButtonPlus, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -65,7 +73,6 @@ GPIO.setup(pinLED, GPIO.OUT)
 GPIO.output(pinLED, LED_state)
 
 # Cheerlights stuff...
-
 urlRoot = "http://api.thingspeak.com/channels/1417/"
 namesToRGB = {'red':        Color(255,  0,  0),
     		'green':        Color(  0,128,  0),
@@ -191,7 +198,7 @@ def allBlack(strip, wait_ms=50):
 def allWhite(strip, wait_ms=50):
 	"""Fill strip with white"""
 	#color = Color(255,255,255)
-    color = namesToRGB['white']
+	color = namesToRGB['white']
 	for i in range(strip.numPixels()):
 		strip.setPixelColor(i,color)
 		strip.show()
@@ -298,35 +305,35 @@ def kitt(strip, wait_ms=50):
 	
 	#while GPIO.input(pinButtonMode) == 0:
 	while checkModeExt() == False:
-		strip.setPixelColor(i,   Color(0,255,0))
-		strip.setPixelColor(i1,  Color(0,255,0))
-		strip.setPixelColor(i2,  Color(0,255,0))
-		strip.setPixelColor(i3,  Color(0,255,0))
-		strip.setPixelColor(i4,  Color(0,200,0))
-		strip.setPixelColor(i5,  Color(0,200,0))
-		strip.setPixelColor(i6,  Color(0,200,0))
-		strip.setPixelColor(i7,  Color(0,150,0))
-		strip.setPixelColor(i8,  Color(0,150,0))
-		strip.setPixelColor(i9,  Color(0,150,0))
-		strip.setPixelColor(i10, Color(0,100,0))
-		strip.setPixelColor(i11, Color(0,100,0))
-		strip.setPixelColor(i12, Color(0,100,0))
-		strip.setPixelColor(i13, Color(0,50,0))
-		strip.setPixelColor(i14, Color(0,50,0))
-		strip.setPixelColor(i15, Color(0,50,0))
-		strip.setPixelColor(i16, Color(0,50,0))
-		strip.setPixelColor(i17, Color(0,25,0))
-		strip.setPixelColor(i18, Color(0,25,0))
-		strip.setPixelColor(i19, Color(0,25,0))
-		strip.setPixelColor(i20, Color(0,25,0))
-		strip.setPixelColor(i21, Color(0,12,0))
-		strip.setPixelColor(i22, Color(0,12,0))
-		strip.setPixelColor(i23, Color(0,12,0))
-		strip.setPixelColor(i24, Color(0,12,0))
-		strip.setPixelColor(i25, Color(0,6,0))
-		strip.setPixelColor(i26, Color(0,6,0))
-		strip.setPixelColor(i27, Color(0,6,0))
-		strip.setPixelColor(i28, Color(0,6,0))
+		strip.setPixelColor(i,   Color(255,0,0))
+		strip.setPixelColor(i1,  Color(255,0,0))
+		strip.setPixelColor(i2,  Color(255,0,0))
+		strip.setPixelColor(i3,  Color(255,0,0))
+		strip.setPixelColor(i4,  Color(200,0,0))
+		strip.setPixelColor(i5,  Color(200,0,0))
+		strip.setPixelColor(i6,  Color(200,0,0))
+		strip.setPixelColor(i7,  Color(150,0,0))
+		strip.setPixelColor(i8,  Color(150,0,0))
+		strip.setPixelColor(i9,  Color(150,0,0))
+		strip.setPixelColor(i10, Color(100,0,0))
+		strip.setPixelColor(i11, Color(100,0,0))
+		strip.setPixelColor(i12, Color(100,0,0))
+		strip.setPixelColor(i13, Color(50,0,0))
+		strip.setPixelColor(i14, Color(50,0,0))
+		strip.setPixelColor(i15, Color(50,0,0))
+		strip.setPixelColor(i16, Color(50,0,0))
+		strip.setPixelColor(i17, Color(25,0,0))
+		strip.setPixelColor(i18, Color(25,0,0))
+		strip.setPixelColor(i19, Color(25,0,0))
+		strip.setPixelColor(i20, Color(25,0,0))
+		strip.setPixelColor(i21, Color(12,0,0))
+		strip.setPixelColor(i22, Color(12,0,0))
+		strip.setPixelColor(i23, Color(12,0,0))
+		strip.setPixelColor(i24, Color(12,0,0))
+		strip.setPixelColor(i25, Color(6,0,0))
+		strip.setPixelColor(i26, Color(6,0,0))
+		strip.setPixelColor(i27, Color(6,0,0))
+		strip.setPixelColor(i28, Color(6,0,0))
 		strip.setPixelColor(i29, Color(0,0,0))
 		strip.show()
 		
@@ -425,11 +432,11 @@ def pacman(strip, wait_ms=50):
 		# display board...
 		for i in range(0, strip.numPixels()):
 			if i == redghost_pos or i-1 == redghost_pos or i+1 == redghost_pos:
-				color = Color(0, 255, 0) # red
+				color = Color(255, 0, 0) # red
 			elif i == redghost2_pos or i-1 == redghost2_pos or i+1 == redghost2_pos:
-				color = Color(0, 255, 0) # red
+				color = Color(255, 0, 0) # red
 			elif i == redghost3_pos or i-1 == redghost3_pos or i+1 == redghost3_pos:
-				color = Color(0, 255, 0) # red
+				color = Color(255, 0, 0) # red
 			elif i == pacman_pos or i-1 == pacman_pos or i+1 == pacman_pos:
 				color = Color(255, 255, 0) # yellow
 			elif i == blueghost_pos or i-1 == blueghost_pos or i+1 == blueghost_pos:
@@ -573,7 +580,6 @@ def pacman(strip, wait_ms=50):
 					food_pos[i] = 1
 				else:
 					food_pos[i] = 0
-
 			
 		time.sleep(wait_ms/1000)
 	time.sleep(1)
@@ -677,7 +683,8 @@ def cheerlights(strip, wait_ms=1000):
 	
 def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
-	for j in range(iterations):
+	while checkModeExt() == False:
+		#for j in range(iterations):
 		for q in range(3):
 			for i in range(0, strip.numPixels(), 3):
 				strip.setPixelColor(i+q, color)
@@ -757,35 +764,29 @@ def theaterChaseRainbow(strip, wait_ms=50):
 
 
 # Main program logic follows:
-#if __name__ == '__main__':
 try:
-	global red, green, blue, brightness, LightingMode, UpdateRequired
+	#global red, green, blue, brightness, LightingMode, UpdateRequired
 
 	# Check if PWM pin is already being used...
 	# Wait for it to be released...
+    # WaitPWM function removed
 
 	# Create NeoPixel object with appropriate configuration.
-	strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
+	strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
 	# Intialize the library (must be called once before other functions).
 	strip.begin()
 
-	print ('Press Ctrl-C to quit.')
+	print ("Press Ctrl-C to quit.")
 
     # Clear any existing colour - set to black...
-	allBlack(strip, 50)
+	allBlack(strip, 5)
 	
 	if len(sys.argv) > 1:
 		LightingMode = int(sys.argv[1])
 	
-	print ('Lighting Mode: ', LightingMode)
+	print ("Lighting Mode: ", ModeLookup[LightingMode])
 	
 	while True:
-
-		#if LightingMode < 12 and UpdateRequired:
-		#	print ("Updating...")
-		#	setBrightness(red, green, blue, brightness)
-		#	colorWipe(strip, Color(green, red,  blue),0)
-		#	UpdateRequired = False
 
 		if LightingMode < 12:
 			checkModeExt()
@@ -800,88 +801,88 @@ try:
 				green = 255
 				blue = 255
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 1: # Candle
 				#brightness = 50
 				red = 255
 				green = 147
 				blue = 41
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 2: # Tungsten
 				#brightness = 50
 				red = 255
 				green = 214
 				blue = 170
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 3: # Halogen
 				#brightness = 50
 				red = 255
 				green = 241
 				blue = 224
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 4: # Overcast
 				#brightness = 50
 				red = 201
 				green = 226
 				blue = 255
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 5: # Clear Blue Sky
 				#brightness = 50
 				red = 64
 				green = 156
 				blue = 255
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 6: # Yellow
 				#brightness = 50
 				red = 0
 				green = 255
 				blue = 255
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 7: # Cyan
 				#brightness = 50
 				red = 255
 				green = 255
 				blue = 0
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 8: # Green
 				#brightness = 50
 				red = 0
 				green = 255
 				blue = 0
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 9: # Magenta
 				#brightness = 50
 				red = 255
 				green = 0
 				blue = 255
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 10: # Blue
 				#brightness = 50
 				red = 0
 				green = 0
 				blue = 255
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 11: # Red
 				#brightness = 50
 				red = 255
 				green = 0
 				blue = 0
 				setBrightness(red, green, blue, brightness)
-				colorWipe(strip, Color(green, red,  blue),0)
+				colorWipe(strip, Color(red, green, blue),0)
 			elif LightingMode == 12:
 				cylon(strip, 10)
 			elif LightingMode == 13:
-				kitt(strip, 10)
+				kitt(strip, 5)
 			elif LightingMode == 14:
 				ChristmasLights(strip,30)
 			elif LightingMode == 15:
@@ -907,7 +908,7 @@ try:
 
 except KeyboardInterrupt:
 	print "Keyboard Interrupt (ctrl-c) - exiting program loop"
-	allBlack(strip, 50)
+	allBlack(strip, 5)
 	GPIO.setup(LED_PIN, GPIO.IN)
 
 finally:
