@@ -12,6 +12,7 @@
 import RPi.GPIO as GPIO
 import sys
 import time
+import datetime
 from random import randint
 from rpi_ws281x import __version__ as __rpi_ws281x__, PixelStrip, Color
 from array import *
@@ -54,6 +55,7 @@ UpdateRequired = True
 red = 255
 green = 255
 blue = 255
+ReverseStrip = False
 
 # Lookup LightingMode names...
 ModeLookup = ["White", "Candle", "Tungsten", "Halogen", "Overcast", "ClearBlueSky",
@@ -61,7 +63,7 @@ ModeLookup = ["White", "Candle", "Tungsten", "Halogen", "Overcast", "ClearBlueSk
               "Cylon", "KnightRider", "TwinkleColours",
               "TheaterChaseRainbow", "RainbowCycle", "CheerLights", "Pacman",
               "TheaterChaseWhite", "TheaterChaseRed", "TheaterChaseBlue",
-              "Rainbow", "RainbowCycle", "TheaterChaseRainbow"]           
+              "Rainbow", "RainbowCycle", "TheaterChaseRainbow", "TwinkleCOlours with CountDown"]           
 
 # Configure the GPIO functions
 GPIO.setup(pinButtonMode, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -378,7 +380,7 @@ def kitt(strip, wait_ms=50):
 		else:
 			i-=1
 		
-		time.sleep(wait_ms/1000.0)
+		time.sleep((200 / strip.numPixels()) * wait_ms/1000.0)
 	time.sleep(1)
 	
 # Define a lighting mode inspired by a popular computer game from... you guessed it, the 80's!
@@ -651,14 +653,6 @@ def ChristmasLights(strip, wait_ms=50):
 			brightness = abs(brightness_array[i]) * 4
 			setBrightness(red, green, blue, brightness)
 			strip.setPixelColor(i, Color(red, green, blue))
-			# Debug...
-			#if i == 53:
-			#	print brightness_array[i]
-			#	print brightness
-			#	print col[i]
-			#	print red
-			#	print green
-			#	print blue
 	
 		strip.show()
 		time.sleep(wait_ms/1000.0)
@@ -708,10 +702,8 @@ def wheel(pos):
 
 def rainbow(strip, wait_ms=20, iterations=1):
 	"""Draw rainbow that fades across all pixels at once."""
-	#for j in range(256*iterations):
 	# Wait for the Mode button to be pressed
 	j = 0
-	#while GPIO.input(pinButtonMode) == 0:
 	while checkModeExt() == False:
 		for i in range(strip.numPixels()):
 			strip.setPixelColor(i, wheel((i+j) & 255))
@@ -726,11 +718,13 @@ def rainbow(strip, wait_ms=20, iterations=1):
 
 def rainbowCycle(strip, wait_ms=20, iterations=5):
 	"""Draw rainbow that uniformly distributes itself across all pixels."""
-	#for j in range(256*iterations):
-	# Wait for the Mode button to be pressed
+	global LightingMode, UpdateRequired
+	
+	# Initialise variables...
 	j = 0
-	#while GPIO.input(pinButtonMode) == 0:
-	while checkModeExt() == False:
+	
+	# Wait for the Mode button to be pressed or for all iterations to be complete
+	while checkModeExt() == False and j < (256*iterations)-1:
 		for i in range(strip.numPixels()):
 			strip.setPixelColor(i, wheel((int(i * 256 / strip.numPixels()) + j) & 255))
 		strip.show()
@@ -739,15 +733,19 @@ def rainbowCycle(strip, wait_ms=20, iterations=5):
 			j += 1
 		else:
 			j = 0
+
 	time.sleep(1)
+	#LightingMode = 16
+	UpdateRequired = True
 	
 
 def theaterChaseRainbow(strip, wait_ms=50):
 	"""Rainbow movie theater light style chaser animation."""
-	#for j in range(256):
-	# Wait for the Mode button to be pressed
+	global LightingMode, UpdateRequired
+	
+	# Initialise variables...
 	j = 0
-	#while GPIO.input(pinButtonMode) == 0:
+	# Wait for the Mode button to be pressed
 	while checkModeExt() == False:
 		for q in range(3):
 			for i in range(0, strip.numPixels(), 3):
@@ -762,6 +760,207 @@ def theaterChaseRainbow(strip, wait_ms=50):
 			j = 0
 	time.sleep(1)
 
+def CountDown(strip, wait_ms=30):
+	"""Countdown timer in binary with 10th second resolution."""
+	global LightingMode, UpdateRequired, red, green, blue
+	
+	brightness_array = []
+	col = []
+	for i in range(0, strip.numPixels()):
+		brightness_array.append(1)
+		col.append(1)
+
+	# Initialise colour & brightness arrays...	
+	for i in range(0, strip.numPixels()):
+		brightness_array[i] = randint(0,50) - 25
+		col[i] = 8
+
+	offset = int(LED_COUNT / 2) - 13
+	
+	# Initialise alarm time... (3 minutes)
+	AlarmTime = (datetime.datetime(2019,12,25,0,0) - datetime.datetime(1970,1,1)).total_seconds()
+	#print (AlarmTime)
+	
+	#AlarmTime = time.time() + 10
+	#print (AlarmTime)
+	
+	
+	TimeLeft = AlarmTime - time.time()
+
+	while checkModeExt() == False and TimeLeft > 0:
+		for i in range(0, strip.numPixels()):
+			if TimeLeft > 0:
+				#color = Color(64, 0, 0) # red
+				#strip.setPixelColor(i, color)
+				
+				if brightness_array[i] >= 25:
+					brightness_array[i] = -25
+				else:
+					brightness_array[i] = brightness_array[i] + 1
+					
+				if brightness_array[i] == 0:
+					col[i] = randint(0,7)
+				
+				if col[i] == 0:   # White
+					red = 255
+					green = 255
+					blue = 255
+				elif col[i] == 1: # Yellow
+					red = 0
+					green = 255
+					blue = 255
+				elif col[i] == 2: # Cyan
+					red = 255
+					green = 255
+					blue = 0
+				elif col[i] == 3: # Green
+					red = 0
+					green = 255
+					blue = 0
+				elif col[i] == 4: # Magenta
+					red = 255
+					green = 0
+					blue = 255
+				elif col[i] == 5: # Blue
+					red = 0
+					green = 0
+					blue = 255
+				elif col[i] == 6: # Red
+					red = 255
+					green = 0
+					blue = 0
+				elif col[i] == 7: # Grey
+					red = 128
+					green = 128
+					blue = 128
+				else:             # Black
+					red = 0
+					green = 0
+					blue = 0
+
+				brightness = abs(brightness_array[i]) * 4
+				setBrightness(red, green, blue, brightness)
+				strip.setPixelColor(i, Color(red, green, blue))
+				
+				if (i >= offset) and (i < (offset + 26)):
+					color = Color(0, 0, 0)
+					strip.setPixelColor(i, color)
+					if (i - offset) == 0: # Bit(15)
+						if int(TimeLeft) & 32768 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 1: # Bit(14)
+						if int(TimeLeft) & 16384 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 2: # Bit(13)
+						if int(TimeLeft) & 8192 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 3: # Bit(12)
+						if int(TimeLeft) & 4096 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 4: # Bit(11)
+						if int(TimeLeft) & 2048 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 5: # Bit(10)
+						if int(TimeLeft) & 1024 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 6: # Bit(9)
+						if int(TimeLeft) & 512 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 7: # Bit(8)
+						if int(TimeLeft) & 256 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 8: # Bit(7)
+						if int(TimeLeft) & 128 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 9: # Bit(6)
+						if int(TimeLeft) & 64 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 10: # Bit(5)
+						if int(TimeLeft) & 32 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 11: # Bit(4)
+						if int(TimeLeft) & 16 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 12: # Bit(3)
+						if int(TimeLeft) & 8 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 13: # Bit(2)
+						if int(TimeLeft) & 4 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 14: # Bit(1)
+						if int(TimeLeft) & 2 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 15: # Bit(0)
+						if int(TimeLeft) & 1 > 0:
+							color = Color(255, 255, 255)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 16: # (0)
+						if TimeLeft - int(TimeLeft) > 0.05:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 17: # (0)
+						if TimeLeft - int(TimeLeft) > 0.15:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 18: # (0)
+						if TimeLeft - int(TimeLeft) > 0.25:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 19: # (0)
+						if TimeLeft - int(TimeLeft) > 0.35:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 20: # (0)
+						if TimeLeft - int(TimeLeft) > 0.45:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 21: # (0)
+						if TimeLeft - int(TimeLeft) > 0.55:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 22: # (0)
+						if TimeLeft - int(TimeLeft) > 0.65:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 23: # (0)
+						if TimeLeft - int(TimeLeft) > 0.75:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 24: # (0)
+						if TimeLeft - int(TimeLeft) > 0.85:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+					if (i - offset) == 25: # (0)
+						if TimeLeft - int(TimeLeft) > 0.95:
+							color = Color(0, 255, 0)
+							strip.setPixelColor(i, color)
+			else:
+				
+				color = Color(0, 0, 255)
+				strip.setPixelColor(i, color)
+				
+		strip.show()
+		time.sleep(wait_ms/1000.0)
+		TimeLeft = AlarmTime - time.time()
+
+	if TimeLeft < 0:
+		LightingMode = 16
+		UpdateRequired = True
 
 # Main program logic follows:
 try:
@@ -905,6 +1104,8 @@ try:
 				rainbowCycle(strip)
 			elif LightingMode == 24:
 				theaterChaseRainbow(strip)
+			elif LightingMode == 25:
+				CountDown(strip)
 
 except KeyboardInterrupt:
 	print "Keyboard Interrupt (ctrl-c) - exiting program loop"
